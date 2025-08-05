@@ -56,6 +56,22 @@
       color: red;
       font-weight: bold;
     }
+    /* Estilo do alerta visual */
+    #alerta {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #e74c3c;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: none;
+      font-family: Arial, sans-serif;
+      z-index: 9999;
+      min-width: 220px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -86,6 +102,9 @@
     <tbody id="tabela-corpo"></tbody>
   </table>
 
+  <!-- Alerta visual -->
+  <div id="alerta"></div>
+
   <script>
     const telefone = "556296094975";
     const apikey = "2198964";
@@ -110,6 +129,16 @@
       fetch(url)
         .then(res => console.log("Mensagem enviada:", mensagem))
         .catch(err => console.error("Erro ao enviar:", err));
+    }
+
+    function mostrarAlerta(mensagem) {
+      const alerta = document.getElementById("alerta");
+      alerta.textContent = mensagem;
+      alerta.style.display = "block";
+
+      setTimeout(() => {
+        alerta.style.display = "none";
+      }, 3500);
     }
 
     function atualizarTabela() {
@@ -151,7 +180,7 @@
       const validade = document.getElementById("validade").value;
 
       if (!nome || !quantidade || !validade) {
-        alert("Preencha todos os campos!");
+        mostrarAlerta("⚠️ Por favor, preencha todos os campos!");
         return;
       }
 
