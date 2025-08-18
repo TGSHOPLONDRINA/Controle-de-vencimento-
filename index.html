@@ -1,208 +1,270 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Controle de Vencimento – P&B Casa de Rações</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .logo img {
-      width: 60px;
-    }
-    input {
-      padding: 10px;
-      margin: 5px;
-    }
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      cursor: pointer;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
-      text-align: center;
-    }
-    th {
-      background-color: #eee;
-    }
-    .status-ok {
-      color: green;
-      font-weight: bold;
-    }
-    .status-warning {
-      color: orange;
-      font-weight: bold;
-    }
-    .status-expired {
-      color: red;
-      font-weight: bold;
-    }
-    /* Estilo do alerta visual */
-    #alerta {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #e74c3c;
-      color: white;
-      padding: 15px 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      display: none;
-      font-family: Arial, sans-serif;
-      z-index: 9999;
-      min-width: 220px;
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Vencimentos - Casa de Ração</title>
+<style>
+body { font-family: Arial, sans-serif; background:#0f172a; color:#fff; margin:0; padding:20px; }
+h1 { text-align:center; margin-bottom:20px; color:#38bdf8; }
+.card { background:#1e293b; border-radius:12px; padding:20px; margin:0 auto 30px auto; max-width:950px; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
+label { display:block; margin-bottom:5px; font-weight:bold; }
+input, select { width:100%; padding:8px; margin-bottom:15px; border:none; border-radius:8px; }
+button { padding:10px; border:none; border-radius:8px; background:#38bdf8; color:#000; font-weight:bold; cursor:pointer; margin-top:5px; }
+button:hover { background:#0ea5e9; }
+.btn-remover { background:#ef4444; color:white; padding:5px 10px; border-radius:6px; cursor:pointer; border:none; }
+.btn-remover:hover { background:#dc2626; }
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th, td { padding:10px; text-align:center; }
+th { background:#334155; }
+tr:nth-child(even) { background:#1e293b; }
+.alerta-vermelho { background: rgba(239,68,68,0.5) !important; animation: piscar 1s infinite alternate; }
+.alerta-amarelo { background: rgba(234,179,8,0.5) !important; }
+@keyframes piscar { from { background-color: rgba(239,68,68,0.3); } to { background-color: rgba(239,68,68,0.8); } }
+.resumo { display:flex; justify-content:space-around; text-align:center; margin-bottom:20px; }
+.resumo div { background:#334155; padding:15px; border-radius:10px; flex:1; margin:5px; }
+#scanner { width:100%; max-width:400px; margin:10px auto; }
+@media(max-width:600px) { .resumo{flex-direction:column;} }
+</style>
 </head>
 <body>
+<h1>Controle de Vencimentos - Casa de Ração</h1>
 
-  <div class="logo">
-    <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Logo da loja">
-    <h1>Controle de Vencimento – P&B Casa de Rações</h1>
-  </div>
+<!-- Resumo -->
+<div class="resumo">
+  <div><strong id="resumoHoje">0</strong><br>Vencem Hoje</div>
+  <div><strong id="resumoSemana">0</strong><br>Vencem na Semana</div>
+  <div><strong id="resumoVencidos">0</strong><br>Já Vencidos</div>
+</div>
 
-  <div>
-    <input type="text" id="nome" placeholder="Nome da Ração" />
-    <input type="number" id="quantidade" placeholder="Quantidade" />
-    <input type="date" id="validade" />
-    <button onclick="adicionarRacao()">📤 Adicionar</button>
-  </div>
+<!-- Cadastro -->
+<div class="card">
+  <label>Produto</label>
+  <input type="text" id="produto" placeholder="Ex: Ração Premium 15kg">
 
-  <table>
+  <label>Código/Barra</label>
+  <input type="text" id="codigo" placeholder="Ex: 1234567890123">
+  <button onclick="iniciarScanner()">📷 Escanear Código</button>
+  <div id="scanner"></div>
+
+  <label>Categoria</label>
+  <select id="categoria">
+    <option value="">Selecione</option>
+    <option>Cachorro</option>
+    <option>Gato</option>
+    <option>Aves</option>
+    <option>Peixes</option>
+    <option>Roedores/Coelhos</option>
+    <option>Cavalos</option>
+    <option>Bovinos</option>
+    <option>Suínos</option>
+    <option>Sementes & Grãos</option>
+    <option>Higiene & Acessórios</option>
+    <option>Outra</option>
+  </select>
+
+  <label>Validade</label>
+  <input type="date" id="validade">
+
+  <label>Quantidade</label>
+  <input type="number" id="quantidade" placeholder="Ex: 10">
+
+  <button onclick="adicionarProduto()">Adicionar Produto</button>
+</div>
+
+<!-- Busca + Filtro + Exportar -->
+<div class="card">
+  <input type="text" id="busca" placeholder="🔍 Buscar produto ou código..." onkeyup="filtrarProdutos()">
+
+  <label>Filtrar por Categoria</label>
+  <select id="filtroCategoria" onchange="filtrarProdutos()">
+    <option value="">Todas</option>
+    <option>Cachorro</option>
+    <option>Gato</option>
+    <option>Aves</option>
+    <option>Peixes</option>
+    <option>Roedores/Coelhos</option>
+    <option>Cavalos</option>
+    <option>Bovinos</option>
+    <option>Suínos</option>
+    <option>Sementes & Grãos</option>
+    <option>Higiene & Acessórios</option>
+    <option>Outra</option>
+  </select>
+
+  <button onclick="exportarCSV()">📤 Exportar CSV</button>
+</div>
+
+<!-- Tabela -->
+<div class="card">
+  <table id="tabela">
     <thead>
       <tr>
         <th>Produto</th>
-        <th>Quantidade</th>
+        <th>Código</th>
+        <th>Categoria</th>
         <th>Validade</th>
-        <th>Faltam</th>
-        <th>Status</th>
-        <th>📥</th>
+        <th>Dias Restantes</th>
+        <th>Quantidade</th>
+        <th>Ações</th>
       </tr>
     </thead>
-    <tbody id="tabela-corpo"></tbody>
+    <tbody>
+      <tr><td colspan="7">Nenhum produto cadastrado.</td></tr>
+    </tbody>
   </table>
+</div>
 
-  <!-- Alerta visual -->
-  <div id="alerta"></div>
+<!-- QuaggaJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script>
+const tabela = document.querySelector("#tabela tbody");
+let produtos = [];
 
-  <script>
-    const telefone = "556296094975";
-    const apikey = "2198964";
+function carregarProdutos() {
+  const dados = localStorage.getItem("produtos");
+  if(dados){ produtos = JSON.parse(dados); atualizarTabela(); }
+}
 
-    function salvar(dados) {
-      localStorage.setItem("racoes", JSON.stringify(dados));
+function salvarProdutos() {
+  localStorage.setItem("produtos", JSON.stringify(produtos));
+}
+
+function calcularDiasRestantes(validade){
+  const hoje = new Date();
+  const expira = new Date(validade);
+  const diff = expira - hoje;
+  return Math.ceil(diff / (1000*60*60*24));
+}
+
+function adicionarProduto(){
+  const nome = document.getElementById("produto").value;
+  const codigo = document.getElementById("codigo").value;
+  const categoria = document.getElementById("categoria").value;
+  const validade = document.getElementById("validade").value;
+  const quantidade = document.getElementById("quantidade").value;
+
+  if(!nome || !validade || !categoria || !codigo){ alert("Preencha todos os campos!"); return; }
+
+  const produto = { id: Date.now(), nome, codigo, categoria, validade, quantidade };
+  produtos.push(produto);
+  salvarProdutos();
+  atualizarTabela();
+
+  document.getElementById("produto").value="";
+  document.getElementById("codigo").value="";
+  document.getElementById("categoria").value="";
+  document.getElementById("validade").value="";
+  document.getElementById("quantidade").value="";
+}
+
+function removerProduto(id){
+  produtos = produtos.filter(p => p.id !== id);
+  salvarProdutos();
+  atualizarTabela();
+}
+
+function atualizarTabela(){
+  tabela.innerHTML = "";
+  if(produtos.length===0){ tabela.innerHTML='<tr><td colspan="7">Nenhum produto cadastrado.</td></tr>'; atualizarResumo(); return; }
+
+  produtos.sort((a,b)=>new Date(a.validade)-new Date(b.validade));
+
+  produtos.forEach(p=>{
+    const dias = calcularDiasRestantes(p.validade);
+    let classe = "";
+    if(dias<0) classe="alerta-vermelho";
+    else if(dias<=3) classe="alerta-vermelho";
+    else if(dias<=7) classe="alerta-amarelo";
+
+    const tr=document.createElement("tr");
+    tr.className=classe;
+    tr.innerHTML=`
+      <td>${p.nome}</td>
+      <td>${p.codigo}</td>
+      <td>${p.categoria}</td>
+      <td>${new Date(p.validade).toLocaleDateString("pt-BR")}</td>
+      <td>${dias<0?"⚠️ Vencido":dias+" dias"}</td>
+      <td>${p.quantidade}</td>
+      <td><button class="btn-remover" onclick="removerProduto(${p.id})">Remover</button></td>
+    `;
+    tabela.appendChild(tr);
+  });
+
+  atualizarResumo();
+  filtrarProdutos();
+}
+
+function atualizarResumo(){
+  let hojeCount=0, semanaCount=0, vencidos=0;
+  produtos.forEach(p=>{
+    const dias=calcularDiasRestantes(p.validade);
+    if(dias===0) hojeCount++;
+    if(dias>0 && dias<=7) semanaCount++;
+    if(dias<0) vencidos++;
+  });
+  document.getElementById("resumoHoje").innerText=hojeCount;
+  document.getElementById("resumoSemana").innerText=semanaCount;
+  document.getElementById("resumoVencidos").innerText=vencidos;
+}
+
+function filtrarProdutos(){
+  const termo=document.getElementById("busca").value.toLowerCase();
+  const filtroCat=document.getElementById("filtroCategoria").value;
+  const linhas=document.querySelectorAll("#tabela tbody tr");
+  linhas.forEach(linha=>{
+    const cols=linha.querySelectorAll("td");
+    if(cols.length>0){
+      const nome=cols[0].innerText.toLowerCase();
+      const codigo=cols[1].innerText.toLowerCase();
+      const categoria=cols[2].innerText;
+      const matchNome = nome.includes(termo) || codigo.includes(termo);
+      const matchCat = filtroCat===""||categoria===filtroCat;
+      linha.style.display = matchNome && matchCat ? "" : "none";
     }
+  });
+}
 
-    function carregar() {
-      return JSON.parse(localStorage.getItem("racoes") || "[]");
-    }
+function exportarCSV(){
+  if(produtos.length===0){ alert("Nenhum produto para exportar!"); return; }
+  let csv="Produto;Código;Categoria;Validade;Dias Restantes;Quantidade\n";
+  produtos.forEach(p=>{
+    const dias=calcularDiasRestantes(p.validade);
+    csv+=`${p.nome};${p.codigo};${p.categoria};${new Date(p.validade).toLocaleDateString("pt-BR")};${dias} dias;${p.quantidade}\n`;
+  });
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download="controle_vencimentos.csv";
+  link.click();
+}
 
-    function calcularDias(validade) {
-      const hoje = new Date();
-      const dataValidade = new Date(validade);
-      const diff = Math.ceil((dataValidade - hoje) / (1000 * 60 * 60 * 24));
-      return diff;
-    }
+// Scanner de código de barras usando QuaggaJS
+function iniciarScanner() {
+  const scannerDiv = document.getElementById('scanner');
+  Quagga.init({
+    inputStream: {
+      name: "Live",
+      type: "LiveStream",
+      target: scannerDiv,
+      constraints: { facingMode: "environment" }
+    },
+    decoder: { readers: ["code_128_reader","ean_reader","ean_8_reader"] }
+  }, function(err) {
+    if(err) { console.error(err); alert("Erro ao acessar a câmera"); return; }
+    Quagga.start();
+  });
 
-    function enviarWhatsApp(mensagem) {
-      const url = `https://api.callmebot.com/whatsapp.php?phone=${telefone}&text=${encodeURIComponent(mensagem)}&apikey=${apikey}`;
-      fetch(url)
-        .then(res => console.log("Mensagem enviada:", mensagem))
-        .catch(err => console.error("Erro ao enviar:", err));
-    }
+  Quagga.onDetected(function(result) {
+    const codigo = result.codeResult.code;
+    document.getElementById('codigo').value = codigo;
+    Quagga.stop();
+    scannerDiv.innerHTML = "";
+    alert("Código detectado: " + codigo);
+  });
+}
 
-    function mostrarAlerta(mensagem) {
-      const alerta = document.getElementById("alerta");
-      alerta.textContent = mensagem;
-      alerta.style.display = "block";
-
-      setTimeout(() => {
-        alerta.style.display = "none";
-      }, 3500);
-    }
-
-    function atualizarTabela() {
-      const lista = carregar();
-      const corpo = document.getElementById("tabela-corpo");
-      corpo.innerHTML = "";
-
-      lista.forEach((item, i) => {
-        const dias = calcularDias(item.validade);
-        let status = "Ok";
-        let classe = "status-ok";
-
-        if (dias < 0) {
-          status = "VENCIDO";
-          classe = "status-expired";
-          enviarWhatsApp(`⚠️ AVISO: O produto "${item.nome}" (Quantidade: ${item.quantidade}) está VENCIDO!`);
-        } else if (dias <= 45) {
-          status = `Vencendo em ${dias} dias`;
-          classe = "status-warning";
-          enviarWhatsApp(`⚠️ Atenção! A ração "${item.nome}" (Quantidade: ${item.quantidade}) está vencendo em ${dias} dias.`);
-        }
-
-        corpo.innerHTML += `
-          <tr>
-            <td>${item.nome}</td>
-            <td>${item.quantidade}</td>
-            <td>${item.validade}</td>
-            <td>${dias}</td>
-            <td class="${classe}">${status}</td>
-            <td><button onclick="removerRacao(${i})">📥</button></td>
-          </tr>
-        `;
-      });
-    }
-
-    function adicionarRacao() {
-      const nome = document.getElementById("nome").value.trim();
-      const quantidade = document.getElementById("quantidade").value;
-      const validade = document.getElementById("validade").value;
-
-      if (!nome || !quantidade || !validade) {
-        mostrarAlerta("⚠️ Por favor, preencha todos os campos!");
-        return;
-      }
-
-      const lista = carregar();
-      lista.push({ nome, quantidade, validade });
-      salvar(lista);
-      atualizarTabela();
-
-      document.getElementById("nome").value = "";
-      document.getElementById("quantidade").value = "";
-      document.getElementById("validade").value = "";
-    }
-
-    function removerRacao(index) {
-      const lista = carregar();
-      lista.splice(index, 1);
-      salvar(lista);
-      atualizarTabela();
-    }
-
-    atualizarTabela();
-  </script>
-
+carregarProdutos();
+</script>
 </body>
 </html>
