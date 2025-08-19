@@ -1,270 +1,128 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Vencimentos - Casa de Ração</title>
-<style>
-body { font-family: Arial, sans-serif; background:#0f172a; color:#fff; margin:0; padding:20px; }
-h1 { text-align:center; margin-bottom:20px; color:#38bdf8; }
-.card { background:#1e293b; border-radius:12px; padding:20px; margin:0 auto 30px auto; max-width:950px; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
-label { display:block; margin-bottom:5px; font-weight:bold; }
-input, select { width:100%; padding:8px; margin-bottom:15px; border:none; border-radius:8px; }
-button { padding:10px; border:none; border-radius:8px; background:#38bdf8; color:#000; font-weight:bold; cursor:pointer; margin-top:5px; }
-button:hover { background:#0ea5e9; }
-.btn-remover { background:#ef4444; color:white; padding:5px 10px; border-radius:6px; cursor:pointer; border:none; }
-.btn-remover:hover { background:#dc2626; }
-table { width:100%; border-collapse:collapse; margin-top:10px; }
-th, td { padding:10px; text-align:center; }
-th { background:#334155; }
-tr:nth-child(even) { background:#1e293b; }
-.alerta-vermelho { background: rgba(239,68,68,0.5) !important; animation: piscar 1s infinite alternate; }
-.alerta-amarelo { background: rgba(234,179,8,0.5) !important; }
-@keyframes piscar { from { background-color: rgba(239,68,68,0.3); } to { background-color: rgba(239,68,68,0.8); } }
-.resumo { display:flex; justify-content:space-around; text-align:center; margin-bottom:20px; }
-.resumo div { background:#334155; padding:15px; border-radius:10px; flex:1; margin:5px; }
-#scanner { width:100%; max-width:400px; margin:10px auto; }
-@media(max-width:600px) { .resumo{flex-direction:column;} }
-</style>
+  <meta charset="UTF-8">
+  <title>Controle de Códigos - Casa de Ração</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f3f4f6; margin:20px; color:#111; }
+    h1 { text-align:center; }
+    .box { background:#fff; padding:20px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.2); margin-bottom:20px; }
+    input, button { padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; width:100%; }
+    button { background:#2563eb; color:#fff; cursor:pointer; border:none; font-weight:bold; }
+    button:hover { background:#1e40af; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { padding:8px; border-bottom:1px solid #ddd; text-align:left; }
+    #scanner { width:100%; height:200px; border:2px dashed #555; margin-top:10px; }
+  </style>
 </head>
 <body>
-<h1>Controle de Vencimentos - Casa de Ração</h1>
+  <h1>📦 Controle de Produtos</h1>
 
-<!-- Resumo -->
-<div class="resumo">
-  <div><strong id="resumoHoje">0</strong><br>Vencem Hoje</div>
-  <div><strong id="resumoSemana">0</strong><br>Vencem na Semana</div>
-  <div><strong id="resumoVencidos">0</strong><br>Já Vencidos</div>
-</div>
+  <div class="box">
+    <label>Nome do Produto:</label>
+    <input type="text" id="nome" placeholder="Ex: Ração Golden 15kg">
 
-<!-- Cadastro -->
-<div class="card">
-  <label>Produto</label>
-  <input type="text" id="produto" placeholder="Ex: Ração Premium 15kg">
+    <label>Código de Barras:</label>
+    <input type="text" id="codigo" placeholder="Escaneie ou digite manualmente">
 
-  <label>Código/Barra</label>
-  <input type="text" id="codigo" placeholder="Ex: 1234567890123">
-  <button onclick="iniciarScanner()">📷 Escanear Código</button>
-  <div id="scanner"></div>
+    <button onclick="iniciarScanner()">📷 Escanear Código</button>
+    <div id="scanner"></div>
 
-  <label>Categoria</label>
-  <select id="categoria">
-    <option value="">Selecione</option>
-    <option>Cachorro</option>
-    <option>Gato</option>
-    <option>Aves</option>
-    <option>Peixes</option>
-    <option>Roedores/Coelhos</option>
-    <option>Cavalos</option>
-    <option>Bovinos</option>
-    <option>Suínos</option>
-    <option>Sementes & Grãos</option>
-    <option>Higiene & Acessórios</option>
-    <option>Outra</option>
-  </select>
+    <button onclick="adicionarProduto()">➕ Adicionar à Lista</button>
+  </div>
 
-  <label>Validade</label>
-  <input type="date" id="validade">
+  <div class="box">
+    <h2>📝 Lista de Produtos</h2>
+    <table id="tabela">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Código</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="enviarWhatsApp()">📲 Enviar para WhatsApp</button>
+  </div>
 
-  <label>Quantidade</label>
-  <input type="number" id="quantidade" placeholder="Ex: 10">
+  <script>
+    let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
-  <button onclick="adicionarProduto()">Adicionar Produto</button>
-</div>
-
-<!-- Busca + Filtro + Exportar -->
-<div class="card">
-  <input type="text" id="busca" placeholder="🔍 Buscar produto ou código..." onkeyup="filtrarProdutos()">
-
-  <label>Filtrar por Categoria</label>
-  <select id="filtroCategoria" onchange="filtrarProdutos()">
-    <option value="">Todas</option>
-    <option>Cachorro</option>
-    <option>Gato</option>
-    <option>Aves</option>
-    <option>Peixes</option>
-    <option>Roedores/Coelhos</option>
-    <option>Cavalos</option>
-    <option>Bovinos</option>
-    <option>Suínos</option>
-    <option>Sementes & Grãos</option>
-    <option>Higiene & Acessórios</option>
-    <option>Outra</option>
-  </select>
-
-  <button onclick="exportarCSV()">📤 Exportar CSV</button>
-</div>
-
-<!-- Tabela -->
-<div class="card">
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th>Produto</th>
-        <th>Código</th>
-        <th>Categoria</th>
-        <th>Validade</th>
-        <th>Dias Restantes</th>
-        <th>Quantidade</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td colspan="7">Nenhum produto cadastrado.</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- QuaggaJS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-<script>
-const tabela = document.querySelector("#tabela tbody");
-let produtos = [];
-
-function carregarProdutos() {
-  const dados = localStorage.getItem("produtos");
-  if(dados){ produtos = JSON.parse(dados); atualizarTabela(); }
-}
-
-function salvarProdutos() {
-  localStorage.setItem("produtos", JSON.stringify(produtos));
-}
-
-function calcularDiasRestantes(validade){
-  const hoje = new Date();
-  const expira = new Date(validade);
-  const diff = expira - hoje;
-  return Math.ceil(diff / (1000*60*60*24));
-}
-
-function adicionarProduto(){
-  const nome = document.getElementById("produto").value;
-  const codigo = document.getElementById("codigo").value;
-  const categoria = document.getElementById("categoria").value;
-  const validade = document.getElementById("validade").value;
-  const quantidade = document.getElementById("quantidade").value;
-
-  if(!nome || !validade || !categoria || !codigo){ alert("Preencha todos os campos!"); return; }
-
-  const produto = { id: Date.now(), nome, codigo, categoria, validade, quantidade };
-  produtos.push(produto);
-  salvarProdutos();
-  atualizarTabela();
-
-  document.getElementById("produto").value="";
-  document.getElementById("codigo").value="";
-  document.getElementById("categoria").value="";
-  document.getElementById("validade").value="";
-  document.getElementById("quantidade").value="";
-}
-
-function removerProduto(id){
-  produtos = produtos.filter(p => p.id !== id);
-  salvarProdutos();
-  atualizarTabela();
-}
-
-function atualizarTabela(){
-  tabela.innerHTML = "";
-  if(produtos.length===0){ tabela.innerHTML='<tr><td colspan="7">Nenhum produto cadastrado.</td></tr>'; atualizarResumo(); return; }
-
-  produtos.sort((a,b)=>new Date(a.validade)-new Date(b.validade));
-
-  produtos.forEach(p=>{
-    const dias = calcularDiasRestantes(p.validade);
-    let classe = "";
-    if(dias<0) classe="alerta-vermelho";
-    else if(dias<=3) classe="alerta-vermelho";
-    else if(dias<=7) classe="alerta-amarelo";
-
-    const tr=document.createElement("tr");
-    tr.className=classe;
-    tr.innerHTML=`
-      <td>${p.nome}</td>
-      <td>${p.codigo}</td>
-      <td>${p.categoria}</td>
-      <td>${new Date(p.validade).toLocaleDateString("pt-BR")}</td>
-      <td>${dias<0?"⚠️ Vencido":dias+" dias"}</td>
-      <td>${p.quantidade}</td>
-      <td><button class="btn-remover" onclick="removerProduto(${p.id})">Remover</button></td>
-    `;
-    tabela.appendChild(tr);
-  });
-
-  atualizarResumo();
-  filtrarProdutos();
-}
-
-function atualizarResumo(){
-  let hojeCount=0, semanaCount=0, vencidos=0;
-  produtos.forEach(p=>{
-    const dias=calcularDiasRestantes(p.validade);
-    if(dias===0) hojeCount++;
-    if(dias>0 && dias<=7) semanaCount++;
-    if(dias<0) vencidos++;
-  });
-  document.getElementById("resumoHoje").innerText=hojeCount;
-  document.getElementById("resumoSemana").innerText=semanaCount;
-  document.getElementById("resumoVencidos").innerText=vencidos;
-}
-
-function filtrarProdutos(){
-  const termo=document.getElementById("busca").value.toLowerCase();
-  const filtroCat=document.getElementById("filtroCategoria").value;
-  const linhas=document.querySelectorAll("#tabela tbody tr");
-  linhas.forEach(linha=>{
-    const cols=linha.querySelectorAll("td");
-    if(cols.length>0){
-      const nome=cols[0].innerText.toLowerCase();
-      const codigo=cols[1].innerText.toLowerCase();
-      const categoria=cols[2].innerText;
-      const matchNome = nome.includes(termo) || codigo.includes(termo);
-      const matchCat = filtroCat===""||categoria===filtroCat;
-      linha.style.display = matchNome && matchCat ? "" : "none";
+    function renderizarTabela() {
+      const tbody = document.querySelector("#tabela tbody");
+      tbody.innerHTML = "";
+      produtos.forEach((p, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.nome}</td>
+          <td>${p.codigo}</td>
+          <td><button onclick="removerProduto(${i})">❌ Remover</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
-  });
-}
 
-function exportarCSV(){
-  if(produtos.length===0){ alert("Nenhum produto para exportar!"); return; }
-  let csv="Produto;Código;Categoria;Validade;Dias Restantes;Quantidade\n";
-  produtos.forEach(p=>{
-    const dias=calcularDiasRestantes(p.validade);
-    csv+=`${p.nome};${p.codigo};${p.categoria};${new Date(p.validade).toLocaleDateString("pt-BR")};${dias} dias;${p.quantidade}\n`;
-  });
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const link=document.createElement("a");
-  link.href=URL.createObjectURL(blob);
-  link.download="controle_vencimentos.csv";
-  link.click();
-}
+    function adicionarProduto() {
+      const nome = document.getElementById("nome").value;
+      const codigo = document.getElementById("codigo").value;
+      if (!nome || !codigo) {
+        alert("Preencha o nome e o código!");
+        return;
+      }
+      produtos.push({ nome, codigo });
+      localStorage.setItem("produtos", JSON.stringify(produtos));
+      document.getElementById("nome").value = "";
+      document.getElementById("codigo").value = "";
+      renderizarTabela();
+    }
 
-// Scanner de código de barras usando QuaggaJS
-function iniciarScanner() {
-  const scannerDiv = document.getElementById('scanner');
-  Quagga.init({
-    inputStream: {
-      name: "Live",
-      type: "LiveStream",
-      target: scannerDiv,
-      constraints: { facingMode: "environment" }
-    },
-    decoder: { readers: ["code_128_reader","ean_reader","ean_8_reader"] }
-  }, function(err) {
-    if(err) { console.error(err); alert("Erro ao acessar a câmera"); return; }
-    Quagga.start();
-  });
+    function removerProduto(i) {
+      produtos.splice(i,1);
+      localStorage.setItem("produtos", JSON.stringify(produtos));
+      renderizarTabela();
+    }
 
-  Quagga.onDetected(function(result) {
-    const codigo = result.codeResult.code;
-    document.getElementById('codigo').value = codigo;
-    Quagga.stop();
-    scannerDiv.innerHTML = "";
-    alert("Código detectado: " + codigo);
-  });
-}
+    function enviarWhatsApp() {
+      if (produtos.length === 0) {
+        alert("A lista está vazia!");
+        return;
+      }
+      let msg = "📦 Lista de produtos:\n\n";
+      produtos.forEach((p, i) => {
+        msg += `${i+1}️⃣ ${p.nome} - ${p.codigo}\n`;
+      });
 
-carregarProdutos();
-</script>
+      const telefone = "5511940678019"; // número fixo da loja
+      const url = "https://wa.me/" + telefone + "?text=" + encodeURIComponent(msg);
+      window.open(url, "_blank");
+    }
+
+    // === SCANNER ===
+    function iniciarScanner() {
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector('#scanner'),
+          constraints: { facingMode: "environment" }
+        },
+        decoder: {
+          readers: ["code_128_reader","ean_reader","ean_8_reader","upc_reader"]
+        }
+      }, function(err) {
+        if (err) { console.error(err); return; }
+        Quagga.start();
+      });
+
+      Quagga.onDetected(function(result) {
+        document.getElementById("codigo").value = result.codeResult.code;
+        Quagga.stop();
+      });
+    }
+
+    renderizarTabela();
+  </script>
 </body>
 </html>
