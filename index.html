@@ -150,7 +150,7 @@
     <input type="text" id="nome" placeholder="Nome da Ração" />
     <input type="number" id="quantidade" placeholder="Quantidade" />
     <input type="date" id="validade" />
-    <button onclick="adicionarRacao()">📤 Adicionar</button>
+    <button id="btnAdd">📤 Adicionar</button>
   </div>
 
   <table>
@@ -177,16 +177,16 @@
       <input type="number" id="editQuantidade" placeholder="Quantidade" />
       <input type="date" id="editValidade" />
       <div class="modal-buttons">
-        <button onclick="salvarEdicao()">💾 Salvar</button>
+        <button id="btnSalvarEdicao">💾 Salvar</button>
         <button class="cancel-btn" onclick="fecharModal()">❌ Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- Firebase (modo compat) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
   <script>
     // Configuração do Firebase
@@ -194,7 +194,7 @@
       apiKey: "AIzaSyAYtgo9aZ8TF2rsF1Xp-z9_0CvdeRLEhQQ",
       authDomain: "peb-casa-de-racaoes.firebaseapp.com",
       projectId: "peb-casa-de-racaoes",
-      storageBucket: "peb-casa-de-racaoes.firebasestorage.app",
+      storageBucket: "peb-casa-de-racaoes.appspot.com",
       messagingSenderId: "998593310608",
       appId: "1:998593310608:web:40997335ddc0a22700cd15",
       measurementId: "G-VNF6QMKZSE"
@@ -213,10 +213,9 @@
       return Math.ceil((dataValidade - hoje) / (1000 * 60 * 60 * 24));
     }
 
+    // Atualiza tabela automaticamente ao mudar dados no Firestore
     function atualizarTabela() {
       const corpo = document.getElementById("tabela-corpo");
-      corpo.innerHTML = "";
-
       db.collection("racoes").onSnapshot(snapshot => {
         corpo.innerHTML = "";
         snapshot.forEach(doc => {
@@ -234,19 +233,19 @@
             classe = "status-warning";
           }
 
-          corpo.innerHTML += `
-            <tr>
-              <td>${item.nome}</td>
-              <td>${item.quantidade}</td>
-              <td>${item.validade}</td>
-              <td>${dias}</td>
-              <td class="${classe}">${status}</td>
-              <td>
-                <button onclick="abrirModal('${id}','${item.nome}','${item.quantidade}','${item.validade}')" style="background:#4CAF50;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">✏️</button>
-                <button onclick="removerRacao('${id}')" style="background:#ff4d4d;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">❌</button>
-              </td>
-            </tr>
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.nome}</td>
+            <td>${item.quantidade}</td>
+            <td>${item.validade}</td>
+            <td>${dias}</td>
+            <td class="${classe}">${status}</td>
+            <td>
+              <button onclick="abrirModal('${id}','${item.nome}','${item.quantidade}','${item.validade}')" style="background:#4CAF50;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">✏️</button>
+              <button onclick="removerRacao('${id}')" style="background:#ff4d4d;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">❌</button>
+            </td>
           `;
+          corpo.appendChild(tr);
         });
       });
     }
@@ -299,6 +298,11 @@
       await db.collection("racoes").doc(id).delete();
     }
 
+    // Eventos
+    document.getElementById("btnAdd").addEventListener("click", adicionarRacao);
+    document.getElementById("btnSalvarEdicao").addEventListener("click", salvarEdicao);
+
+    // Carrega tabela ao iniciar
     atualizarTabela();
   </script>
 </body>
